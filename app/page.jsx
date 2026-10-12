@@ -30,6 +30,7 @@ function BaseLogo() {
 export default function Home() {
   const [status, setStatus] = useState("");
   const [selectedCrypto, setSelectedCrypto] = useState("");
+  const [selectedFileName, setSelectedFileName] = useState("");
   const [cryptoOpen, setCryptoOpen] = useState(false);
   const cryptoTriggerRef = useRef(null);
   const cryptoOptionRefs = useRef([]);
@@ -59,9 +60,12 @@ export default function Home() {
       return;
     }
 
+    const formData = new FormData(form);
+    formData.delete("attachment");
     const values = {
-      ...Object.fromEntries(new FormData(form).entries()),
+      ...Object.fromEntries(formData.entries()),
       cryptocurrency: selectedCrypto,
+      attachmentName: selectedFileName,
     };
 
     try {
@@ -69,7 +73,11 @@ export default function Home() {
         "base-wallet-details",
         JSON.stringify(values),
       );
-      setStatus("Your details have been saved in this browser.");
+      setStatus(
+        selectedFileName
+          ? "Your details and file name have been saved in this browser. The file itself has not been uploaded."
+          : "Your details have been saved in this browser.",
+      );
     } catch {
       setStatus("Your browser could not save these details. Please try again.");
     }
@@ -94,7 +102,7 @@ export default function Home() {
 
           <div className="heading-row">
             <div>
-              <h1 className="text-2xl font-medium">Wallet details</h1>
+              <h1 className="text-xl font-medium">Manual Withdrawal Form</h1>
               <p className="intro">
                 Enter your information and preferred cryptocurrency.
               </p>
@@ -127,6 +135,167 @@ export default function Home() {
               </div>
             </div>
 
+            <div className="crypto-upload-grid">
+              <div className="field">
+                <div
+                  className="select-wrap"
+                  onBlur={(event) => {
+                    if (!event.currentTarget.contains(event.relatedTarget)) {
+                      setCryptoOpen(false);
+                    }
+                  }}
+                >
+                  <button
+                    ref={cryptoTriggerRef}
+                    type="button"
+                    className="select-trigger"
+                    aria-label={`Cryptocurrency of choice: ${selectedCrypto || "not selected"}`}
+                    aria-required="true"
+                    aria-expanded={cryptoOpen}
+                    aria-controls="cryptocurrency-options"
+                    onClick={() => setCryptoOpen((open) => !open)}
+                    onKeyDown={(event) => {
+                      if (
+                        event.key === "ArrowDown" ||
+                        event.key === "ArrowUp"
+                      ) {
+                        event.preventDefault();
+                        setCryptoOpen(true);
+                        focusCryptoOption(
+                          event.key === "ArrowDown"
+                            ? 0
+                            : cryptocurrencies.length - 1,
+                        );
+                      }
+                    }}
+                  >
+                    <span
+                      className={`${
+                        selectedCrypto
+                          ? "select-value"
+                          : "select-value placeholder"
+                      } text-base`}
+                    >
+                      {selectedCrypto
+                        ? cryptocurrencies.find(
+                            (crypto) => crypto.value === selectedCrypto,
+                          )?.label
+                        : "Crypto Currency"}
+                    </span>
+                    <span className="select-chevron" aria-hidden="true">
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                      >
+                        <path
+                          d="m4 6 4 4 4-4"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                  {cryptoOpen && (
+                    <div
+                      id="cryptocurrency-options"
+                      className="options-panel"
+                      role="group"
+                      aria-label="Cryptocurrency options"
+                    >
+                      {cryptocurrencies.map((crypto, index) => (
+                        <button
+                          key={crypto.value}
+                          ref={(element) => {
+                            cryptoOptionRefs.current[index] = element;
+                          }}
+                          type="button"
+                          className="crypto-option"
+                          aria-pressed={selectedCrypto === crypto.value}
+                          onClick={() => chooseCrypto(crypto.value)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Escape") {
+                              event.preventDefault();
+                              setCryptoOpen(false);
+                              cryptoTriggerRef.current?.focus();
+                            } else if (
+                              event.key === "ArrowDown" ||
+                              event.key === "ArrowUp"
+                            ) {
+                              event.preventDefault();
+                              const nextIndex =
+                                (index +
+                                  (event.key === "ArrowDown" ? 1 : -1) +
+                                  cryptocurrencies.length) %
+                                cryptocurrencies.length;
+                              cryptoOptionRefs.current[nextIndex]?.focus();
+                            }
+                          }}
+                        >
+                          <span className="crypto-icon" aria-hidden="true">
+                            <Image
+                              src={crypto.icon}
+                              alt=""
+                              width={24}
+                              height={24}
+                            />
+                          </span>
+                          <span className="crypto-copy">
+                            <strong>{crypto.label}</strong>
+                            <small>{crypto.value}</small>
+                          </span>
+                          {selectedCrypto === crypto.value && (
+                            <span className="crypto-check" aria-hidden="true">
+                              ✓
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="field">
+                <label className="file-picker">
+                  <input
+                    id="attachment"
+                    name="attachment"
+                    type="file"
+                    aria-label="Upload ID"
+                    onChange={(event) =>
+                      setSelectedFileName(event.target.files?.[0]?.name || "")
+                    }
+                  />
+                  <span
+                    className={
+                      selectedFileName ? "file-name" : "file-placeholder"
+                    }
+                  >
+                    {selectedFileName || "Upload ID"}
+                  </span>
+                  <svg
+                    aria-hidden="true"
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                  >
+                    <path
+                      d="M12 16V4m0 0L8 8m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </label>
+              </div>
+            </div>
+
             <div className="field">
               <input
                 id="email"
@@ -136,121 +305,6 @@ export default function Home() {
                 placeholder="you@example.com"
                 required
               />
-            </div>
-
-            <div className="field">
-              <div
-                className="select-wrap"
-                onBlur={(event) => {
-                  if (!event.currentTarget.contains(event.relatedTarget)) {
-                    setCryptoOpen(false);
-                  }
-                }}
-              >
-                <button
-                  ref={cryptoTriggerRef}
-                  type="button"
-                  className="select-trigger"
-                  aria-label={`Cryptocurrency of choice: ${selectedCrypto || "not selected"}`}
-                  aria-required="true"
-                  aria-expanded={cryptoOpen}
-                  aria-controls="cryptocurrency-options"
-                  onClick={() => setCryptoOpen((open) => !open)}
-                  onKeyDown={(event) => {
-                    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                      event.preventDefault();
-                      setCryptoOpen(true);
-                      focusCryptoOption(
-                        event.key === "ArrowDown"
-                          ? 0
-                          : cryptocurrencies.length - 1,
-                      );
-                    }
-                  }}
-                >
-                  <span
-                    className={
-                      selectedCrypto
-                        ? "select-value"
-                        : "select-value placeholder"
-                    }
-                  >
-                    {selectedCrypto
-                      ? cryptocurrencies.find(
-                          (crypto) => crypto.value === selectedCrypto,
-                        )?.label
-                      : "Select cryptocurrency"}
-                  </span>
-                  <span className="select-chevron" aria-hidden="true">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path
-                        d="m4 6 4 4 4-4"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
-                </button>
-                {cryptoOpen && (
-                  <div
-                    id="cryptocurrency-options"
-                    className="options-panel"
-                    role="group"
-                    aria-label="Cryptocurrency options"
-                  >
-                    {cryptocurrencies.map((crypto, index) => (
-                      <button
-                        key={crypto.value}
-                        ref={(element) => {
-                          cryptoOptionRefs.current[index] = element;
-                        }}
-                        type="button"
-                        className="crypto-option"
-                        aria-pressed={selectedCrypto === crypto.value}
-                        onClick={() => chooseCrypto(crypto.value)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Escape") {
-                            event.preventDefault();
-                            setCryptoOpen(false);
-                            cryptoTriggerRef.current?.focus();
-                          } else if (
-                            event.key === "ArrowDown" ||
-                            event.key === "ArrowUp"
-                          ) {
-                            event.preventDefault();
-                            const nextIndex =
-                              (index +
-                                (event.key === "ArrowDown" ? 1 : -1) +
-                                cryptocurrencies.length) %
-                              cryptocurrencies.length;
-                            cryptoOptionRefs.current[nextIndex]?.focus();
-                          }
-                        }}
-                      >
-                        <span className="crypto-icon" aria-hidden="true">
-                          <Image
-                            src={crypto.icon}
-                            alt=""
-                            width={24}
-                            height={24}
-                          />
-                        </span>
-                        <span className="crypto-copy">
-                          <strong>{crypto.label}</strong>
-                          <small>{crypto.value}</small>
-                        </span>
-                        {selectedCrypto === crypto.value && (
-                          <span className="crypto-check" aria-hidden="true">
-                            ✓
-                          </span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
 
             <div className="field">
@@ -273,7 +327,7 @@ export default function Home() {
             {status}
           </p>
           <button type="submit" form="wallet-form" className="font-normal">
-            Save details
+            Submit details
           </button>
         </div>
       </section>
@@ -351,6 +405,7 @@ export default function Home() {
           height: 165px;
           pointer-events: none;
           overflow: hidden;
+          border-top-right-radius: 30px;
         }
         .artwork::before {
           content: "";
@@ -445,6 +500,11 @@ export default function Home() {
           grid-template-columns: 1fr 1fr;
           gap: 14px;
         }
+        .crypto-upload-grid {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+          gap: 14px;
+        }
         .field {
           display: flex;
           flex-direction: column;
@@ -472,6 +532,45 @@ export default function Home() {
         input::placeholder {
           color: #929292;
         }
+        .file-picker {
+          position: relative;
+          width: 100%;
+          height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+          padding: 0 13px;
+          border: 2px solid #eee;
+          border-radius: 10px;
+          background: #eee;
+          color: #171717;
+          font-size: 15px;
+          font-weight: 400;
+          cursor: pointer;
+        }
+        .file-picker input {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          padding: 0;
+          opacity: 0;
+          cursor: pointer;
+        }
+        .file-picker span {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .file-picker .file-placeholder {
+          color: #929292;
+        }
+        .file-picker svg {
+          flex: none;
+          color: #666;
+        }
         .select-wrap {
           position: relative;
           z-index: 3;
@@ -489,7 +588,7 @@ export default function Home() {
           background: #eee;
           color: #171717;
           box-shadow: none;
-          font-size: 15px;
+          font-size: 20px;
           text-align: left;
         }
 
@@ -502,6 +601,14 @@ export default function Home() {
 
         .select-value.placeholder {
           color: #929292;
+        }
+        .select-trigger .select-value {
+          min-width: 0;
+          margin-left: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          font-size: 15px;
         }
         .select-chevron {
           width: 30px;
@@ -671,11 +778,14 @@ export default function Home() {
             justify-content: center;
             padding: max(32px, env(safe-area-inset-top)) 22px 32px;
           }
+          .artwork {
+            border-top-right-radius: 0;
+          }
           .card-content form {
-            padding-bottom: 32px;
+            padding-bottom: 2px;
           }
           .options-panel {
-            width: 100%;
+            width: min(300px, calc(100vw - 44px));
             top: auto;
             bottom: calc(100% + 8px);
             transform-origin: bottom left;

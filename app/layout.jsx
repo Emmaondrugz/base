@@ -8,8 +8,11 @@ const poppins = Poppins({
 });
 
 export const metadata = {
-  title: "Base",
-  description: "A simple form built with Next.js",
+  title: "Base manual withdrawal form",
+  description: "Base manual withdrawal form",
+  icons: {
+    icon: [{ url: "/base-icon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }) {
