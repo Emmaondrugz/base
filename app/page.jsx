@@ -104,7 +104,8 @@ export default function Home() {
             <div>
               <h1 className="text-xl font-medium">Manual Withdrawal Form</h1>
               <p className="intro">
-                Enter your information and preferred cryptocurrency.
+                Enter your information and preferred cryptocurrency (10% min
+                withdrawal)
               </p>
             </div>
           </div>
