@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const cryptocurrencies = [
   { value: "BTC", label: "Bitcoin", icon: "/crypto/btc.svg" },
@@ -32,8 +32,13 @@ export default function Home() {
   const [selectedCrypto, setSelectedCrypto] = useState("");
   const [selectedFileName, setSelectedFileName] = useState("");
   const [cryptoOpen, setCryptoOpen] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const cryptoTriggerRef = useRef(null);
   const cryptoOptionRefs = useRef([]);
+  const submitTimerRef = useRef(null);
+
+  useEffect(() => () => window.clearTimeout(submitTimerRef.current), []);
 
   function focusCryptoOption(index) {
     requestAnimationFrame(() => cryptoOptionRefs.current[index]?.focus());
@@ -48,6 +53,7 @@ export default function Home() {
 
   function handleSubmit(event) {
     event.preventDefault();
+    if (isSubmitting) return;
     setStatus("");
 
     const form = event.currentTarget;
@@ -73,11 +79,11 @@ export default function Home() {
         "base-wallet-details",
         JSON.stringify(values),
       );
-      setStatus(
-        selectedFileName
-          ? "Your details and file name have been saved in this browser. The file itself has not been uploaded."
-          : "Your details have been saved in this browser.",
-      );
+      setIsSubmitting(true);
+      submitTimerRef.current = window.setTimeout(() => {
+        setIsSubmitting(false);
+        setSubmitted(true);
+      }, 3000);
     } catch {
       setStatus("Your browser could not save these details. Please try again.");
     }
@@ -88,7 +94,33 @@ export default function Home() {
       <div className="guide guide-left" aria-hidden="true" />
       <div className="guide guide-right" aria-hidden="true" />
 
-      <section className="form-card" aria-labelledby="form-title">
+      <section
+        className={`form-card${submitted ? " is-success" : ""}`}
+        aria-labelledby={submitted ? "success-title" : "form-title"}
+      >
+        {submitted ? (
+          <div className="success-content" role="status" aria-live="polite">
+            <span className="success-icon" aria-hidden="true">
+              <svg viewBox="0 0 96 96" fill="none">
+                <circle cx="48" cy="48" r="47" fill="currentColor" />
+                <path
+                  className="success-check"
+                  d="M27 48.5 41 62l28-29"
+                  stroke="white"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <h1 id="success-title">Withdrawal request received</h1>
+            <p>
+              Base has received your withdrawal request. We&apos;ll post an update
+              soon.
+            </p>
+          </div>
+        ) : (
+          <>
         <div className="card-content">
           <div className="artwork" aria-hidden="true">
             <span className="artwork-orb orb-one" />
@@ -102,7 +134,9 @@ export default function Home() {
 
           <div className="heading-row">
             <div>
-              <h1 className="text-xl font-medium">Manual Withdrawal Form</h1>
+              <h1 id="form-title" className="text-xl font-medium">
+                Manual Withdrawal Form
+              </h1>
               <p className="intro">
                 Enter your information and preferred cryptocurrency (10% min
                 withdrawal)
@@ -267,6 +301,7 @@ export default function Home() {
                     name="attachment"
                     type="file"
                     aria-label="Upload ID"
+                    required
                     onChange={(event) =>
                       setSelectedFileName(event.target.files?.[0]?.name || "")
                     }
@@ -327,10 +362,20 @@ export default function Home() {
           <p className="status" role="status" aria-live="polite">
             {status}
           </p>
-          <button type="submit" form="wallet-form" className="font-normal">
-            Submit details
+          <button
+            type="submit"
+            form="wallet-form"
+            className="submit-button font-normal"
+            disabled={isSubmitting}
+          >
+            {isSubmitting && <span className="submit-spinner" aria-hidden="true" />}
+            <span className="submit-label">
+              {isSubmitting ? "Submitting..." : "Submit details"}
+            </span>
           </button>
         </div>
+          </>
+        )}
       </section>
 
       <style jsx>{`
@@ -393,6 +438,75 @@ export default function Home() {
           box-shadow:
             0 18px 28px rgba(0, 0, 0, 0.09),
             inset 0 1px 0 #fff;
+        }
+        .form-card.is-success {
+          min-height: 520px;
+          display: grid;
+          place-items: center;
+        }
+        .success-content {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 60px 36px;
+          text-align: center;
+          animation: success-enter 450ms ease-out both;
+        }
+        .success-icon {
+          display: block;
+          width: 96px;
+          height: 96px;
+          color: #0000ff;
+          filter: drop-shadow(0 10px 16px rgba(0, 0, 255, 0.16));
+          animation: success-pop 550ms cubic-bezier(0.18, 0.9, 0.25, 1.25) both;
+        }
+        .success-icon svg {
+          display: block;
+          width: 100%;
+          height: 100%;
+        }
+        .success-check {
+          stroke-dasharray: 62;
+          stroke-dashoffset: 62;
+          animation: success-draw 450ms ease-out 350ms forwards;
+        }
+        .success-content h1 {
+          margin: 28px 0 0;
+          font-size: 25px;
+          font-weight: 600;
+          line-height: 1.25;
+        }
+        .success-content p {
+          max-width: 350px;
+          margin: 12px 0 0;
+          color: #606060;
+          font-size: 14px;
+          line-height: 1.5;
+        }
+        @keyframes success-enter {
+          from {
+            opacity: 0;
+            transform: translateY(8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        @keyframes success-pop {
+          from {
+            opacity: 0;
+            transform: scale(0.55);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+        @keyframes success-draw {
+          to {
+            stroke-dashoffset: 0;
+          }
         }
         .card-content {
           position: relative;
@@ -753,6 +867,38 @@ export default function Home() {
           margin-left: 6px;
           font-size: 13px;
         }
+        .submit-button {
+          min-width: 157px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 9px;
+        }
+        .submit-button .submit-label,
+        .submit-button .submit-spinner {
+          margin-left: 0;
+          font-size: inherit;
+        }
+        .submit-spinner {
+          width: 16px;
+          height: 16px;
+          flex: none;
+          border: 2px solid rgba(255, 255, 255, 0.4);
+          border-top-color: #fff;
+          border-radius: 50%;
+          animation: submit-spin 600ms linear infinite;
+        }
+        .submit-button:disabled,
+        .submit-button:disabled:hover {
+          background: #0000ff;
+          transform: none;
+          cursor: wait;
+        }
+        @keyframes submit-spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
         @media (max-width: 560px) {
           .page-shell {
             padding: 0;
@@ -771,6 +917,10 @@ export default function Home() {
             display: flex;
             flex-direction: column;
             border-radius: 0;
+          }
+          .form-card.is-success {
+            min-height: 100svh;
+            justify-content: center;
           }
           .card-content {
             flex: 1;
@@ -819,6 +969,17 @@ export default function Home() {
         }
         @media (prefers-reduced-motion: reduce) {
           .options-panel {
+            animation: none;
+          }
+          .success-content,
+          .success-icon,
+          .success-check {
+            animation: none;
+          }
+          .success-check {
+            stroke-dashoffset: 0;
+          }
+          .submit-spinner {
             animation: none;
           }
         }
