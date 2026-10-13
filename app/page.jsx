@@ -29,7 +29,7 @@ function BaseLogo() {
 
 export default function Home() {
   const [status, setStatus] = useState("");
-  const [selectedCrypto, setSelectedCrypto] = useState("");
+  const [selectedCrypto, setSelectedCrypto] = useState("BTC");
   const [selectedFileName, setSelectedFileName] = useState("");
   const [cryptoOpen, setCryptoOpen] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -37,6 +37,9 @@ export default function Home() {
   const cryptoTriggerRef = useRef(null);
   const cryptoOptionRefs = useRef([]);
   const submitTimerRef = useRef(null);
+  const selectedCryptocurrency = cryptocurrencies.find(
+    (crypto) => crypto.value === selectedCrypto,
+  );
 
   useEffect(() => () => window.clearTimeout(submitTimerRef.current), []);
 
@@ -115,265 +118,297 @@ export default function Home() {
             </span>
             <h1 id="success-title">Withdrawal request received</h1>
             <p>
-              Base has received your withdrawal request. We&apos;ll post an update
-              soon.
+              Base has received your withdrawal request. We&apos;ll post an
+              update soon.
             </p>
           </div>
         ) : (
           <>
-        <div className="card-content">
-          <div className="artwork" aria-hidden="true">
-            <span className="artwork-orb orb-one" />
-            <span className="artwork-orb orb-two" />
-            <span className="artwork-orb orb-three" />
-          </div>
-
-          <div className="logo-wrap">
-            <BaseLogo />
-          </div>
-
-          <div className="heading-row">
-            <div>
-              <h1 id="form-title" className="text-xl font-medium">
-                Manual Withdrawal Form
-              </h1>
-              <p className="intro">
-                Enter your information and preferred cryptocurrency (10% min
-                withdrawal)
-              </p>
-            </div>
-          </div>
-
-          <div className="divider" />
-
-          <form id="wallet-form" onSubmit={handleSubmit}>
-            <div className="name-grid">
-              <div className="field">
-                <input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  autoComplete="given-name"
-                  placeholder="First name"
-                  required
-                />
+            <div className="card-content">
+              <div className="artwork" aria-hidden="true">
+                <span className="artwork-orb orb-one" />
+                <span className="artwork-orb orb-two" />
+                <span className="artwork-orb orb-three" />
               </div>
-              <div className="field">
-                <input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  autoComplete="family-name"
-                  placeholder="Last name"
-                  required
-                />
-              </div>
-            </div>
 
-            <div className="crypto-upload-grid">
-              <div className="field">
-                <div
-                  className="select-wrap"
-                  onBlur={(event) => {
-                    if (!event.currentTarget.contains(event.relatedTarget)) {
-                      setCryptoOpen(false);
-                    }
-                  }}
-                >
-                  <button
-                    ref={cryptoTriggerRef}
-                    type="button"
-                    className="select-trigger"
-                    aria-label={`Cryptocurrency of choice: ${selectedCrypto || "not selected"}`}
-                    aria-required="true"
-                    aria-expanded={cryptoOpen}
-                    aria-controls="cryptocurrency-options"
-                    onClick={() => setCryptoOpen((open) => !open)}
-                    onKeyDown={(event) => {
-                      if (
-                        event.key === "ArrowDown" ||
-                        event.key === "ArrowUp"
-                      ) {
-                        event.preventDefault();
-                        setCryptoOpen(true);
-                        focusCryptoOption(
-                          event.key === "ArrowDown"
-                            ? 0
-                            : cryptocurrencies.length - 1,
-                        );
-                      }
-                    }}
-                  >
-                    <span
-                      className={`${
-                        selectedCrypto
-                          ? "select-value"
-                          : "select-value placeholder"
-                      } text-base`}
+              <div className="logo-wrap">
+                <BaseLogo />
+              </div>
+
+              <div className="heading-row">
+                <div>
+                  <h1 id="form-title" className="text-xl font-medium">
+                    Manual Withdrawal Form
+                  </h1>
+                  <p className="intro">
+                    Enter your information and preferred cryptocurrency (10% min
+                    withdrawal)
+                  </p>
+                </div>
+              </div>
+
+              <div className="divider" />
+
+              <form id="wallet-form" onSubmit={handleSubmit}>
+                <div className="name-grid">
+                  <div className="field">
+                    <input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      autoComplete="given-name"
+                      placeholder="First name"
+                      required
+                    />
+                  </div>
+                  <div className="field">
+                    <input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      autoComplete="family-name"
+                      placeholder="Last name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="field">
+                  <input
+                    id="email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="you@example.com"
+                    required
+                  />
+                </div>
+
+                <div className="field">
+                  <input
+                    id="amount"
+                    name="amount"
+                    type="number"
+                    inputMode="decimal"
+                    min="0.00000001"
+                    step="any"
+                    placeholder="Amount"
+                    aria-label="Amount"
+                    required
+                  />
+                </div>
+
+                <div className="crypto-upload-grid">
+                  <div className="field">
+                    <div
+                      className="select-wrap"
+                      onBlur={(event) => {
+                        if (
+                          !event.currentTarget.contains(event.relatedTarget)
+                        ) {
+                          setCryptoOpen(false);
+                        }
+                      }}
                     >
-                      {selectedCrypto
-                        ? cryptocurrencies.find(
-                            (crypto) => crypto.value === selectedCrypto,
-                          )?.label
-                        : "Crypto Currency"}
-                    </span>
-                    <span className="select-chevron" aria-hidden="true">
+                      <button
+                        ref={cryptoTriggerRef}
+                        type="button"
+                        className="select-trigger"
+                        aria-label={`Cryptocurrency of choice: ${selectedCrypto || "not selected"}`}
+                        aria-required="true"
+                        aria-expanded={cryptoOpen}
+                        aria-controls="cryptocurrency-options"
+                        onClick={() => setCryptoOpen((open) => !open)}
+                        onKeyDown={(event) => {
+                          if (
+                            event.key === "ArrowDown" ||
+                            event.key === "ArrowUp"
+                          ) {
+                            event.preventDefault();
+                            setCryptoOpen(true);
+                            focusCryptoOption(
+                              event.key === "ArrowDown"
+                                ? 0
+                                : cryptocurrencies.length - 1,
+                            );
+                          }
+                        }}
+                      >
+                        <span
+                          className={`${
+                            selectedCrypto
+                              ? "select-value"
+                              : "select-value placeholder"
+                          } text-base`}
+                        >
+                          {selectedCryptocurrency ? (
+                            <>
+                              <Image
+                                src={selectedCryptocurrency.icon}
+                                alt=""
+                                width={24}
+                                height={24}
+                                aria-hidden="true"
+                              />
+                              {selectedCryptocurrency.label}
+                            </>
+                          ) : (
+                            "Crypto Currency"
+                          )}
+                        </span>
+                        <span className="select-chevron" aria-hidden="true">
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 16 16"
+                            fill="none"
+                          >
+                            <path
+                              d="m4 6 4 4 4-4"
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        </span>
+                      </button>
+                      {cryptoOpen && (
+                        <div
+                          id="cryptocurrency-options"
+                          className="options-panel"
+                          role="group"
+                          aria-label="Cryptocurrency options"
+                        >
+                          {cryptocurrencies.map((crypto, index) => (
+                            <button
+                              key={crypto.value}
+                              ref={(element) => {
+                                cryptoOptionRefs.current[index] = element;
+                              }}
+                              type="button"
+                              className="crypto-option"
+                              aria-pressed={selectedCrypto === crypto.value}
+                              onClick={() => chooseCrypto(crypto.value)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Escape") {
+                                  event.preventDefault();
+                                  setCryptoOpen(false);
+                                  cryptoTriggerRef.current?.focus();
+                                } else if (
+                                  event.key === "ArrowDown" ||
+                                  event.key === "ArrowUp"
+                                ) {
+                                  event.preventDefault();
+                                  const nextIndex =
+                                    (index +
+                                      (event.key === "ArrowDown" ? 1 : -1) +
+                                      cryptocurrencies.length) %
+                                    cryptocurrencies.length;
+                                  cryptoOptionRefs.current[nextIndex]?.focus();
+                                }
+                              }}
+                            >
+                              <span className="crypto-icon" aria-hidden="true">
+                                <Image
+                                  src={crypto.icon}
+                                  alt=""
+                                  width={24}
+                                  height={24}
+                                />
+                              </span>
+                              <span className="crypto-copy">
+                                <strong>{crypto.label}</strong>
+                                <small>{crypto.value}</small>
+                              </span>
+                              {selectedCrypto === crypto.value && (
+                                <span
+                                  className="crypto-check"
+                                  aria-hidden="true"
+                                >
+                                  ✓
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="field">
+                    <label className="file-picker">
+                      <input
+                        id="attachment"
+                        name="attachment"
+                        type="file"
+                        aria-label="Upload ID"
+                        required
+                        onChange={(event) =>
+                          setSelectedFileName(
+                            event.target.files?.[0]?.name || "",
+                          )
+                        }
+                      />
+                      <span
+                        className={
+                          selectedFileName ? "file-name" : "file-placeholder"
+                        }
+                      >
+                        {selectedFileName || "Upload ID"}
+                      </span>
                       <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
+                        aria-hidden="true"
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
                         fill="none"
                       >
                         <path
-                          d="m4 6 4 4 4-4"
+                          d="M12 16V4m0 0L8 8m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"
                           stroke="currentColor"
                           strokeWidth="1.8"
                           strokeLinecap="round"
                           strokeLinejoin="round"
                         />
                       </svg>
-                    </span>
-                  </button>
-                  {cryptoOpen && (
-                    <div
-                      id="cryptocurrency-options"
-                      className="options-panel"
-                      role="group"
-                      aria-label="Cryptocurrency options"
-                    >
-                      {cryptocurrencies.map((crypto, index) => (
-                        <button
-                          key={crypto.value}
-                          ref={(element) => {
-                            cryptoOptionRefs.current[index] = element;
-                          }}
-                          type="button"
-                          className="crypto-option"
-                          aria-pressed={selectedCrypto === crypto.value}
-                          onClick={() => chooseCrypto(crypto.value)}
-                          onKeyDown={(event) => {
-                            if (event.key === "Escape") {
-                              event.preventDefault();
-                              setCryptoOpen(false);
-                              cryptoTriggerRef.current?.focus();
-                            } else if (
-                              event.key === "ArrowDown" ||
-                              event.key === "ArrowUp"
-                            ) {
-                              event.preventDefault();
-                              const nextIndex =
-                                (index +
-                                  (event.key === "ArrowDown" ? 1 : -1) +
-                                  cryptocurrencies.length) %
-                                cryptocurrencies.length;
-                              cryptoOptionRefs.current[nextIndex]?.focus();
-                            }
-                          }}
-                        >
-                          <span className="crypto-icon" aria-hidden="true">
-                            <Image
-                              src={crypto.icon}
-                              alt=""
-                              width={24}
-                              height={24}
-                            />
-                          </span>
-                          <span className="crypto-copy">
-                            <strong>{crypto.label}</strong>
-                            <small>{crypto.value}</small>
-                          </span>
-                          {selectedCrypto === crypto.value && (
-                            <span className="crypto-check" aria-hidden="true">
-                              ✓
-                            </span>
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                    </label>
+                  </div>
                 </div>
-              </div>
 
-              <div className="field">
-                <label className="file-picker">
+                <div className="field">
                   <input
-                    id="attachment"
-                    name="attachment"
-                    type="file"
-                    aria-label="Upload ID"
+                    id="walletAddress"
+                    name="walletAddress"
+                    type="text"
+                    autoCapitalize="off"
+                    autoCorrect="off"
+                    spellCheck="false"
+                    placeholder="Enter your wallet address"
                     required
-                    onChange={(event) =>
-                      setSelectedFileName(event.target.files?.[0]?.name || "")
-                    }
                   />
-                  <span
-                    className={
-                      selectedFileName ? "file-name" : "file-placeholder"
-                    }
-                  >
-                    {selectedFileName || "Upload ID"}
-                  </span>
-                  <svg
-                    aria-hidden="true"
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                  >
-                    <path
-                      d="M12 16V4m0 0L8 8m4-4 4 4M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                </label>
-              </div>
+                </div>
+              </form>
             </div>
 
-            <div className="field">
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                required
-              />
+            <div className="card-footer">
+              <p className="status" role="status" aria-live="polite">
+                {status}
+              </p>
+              <button
+                type="submit"
+                form="wallet-form"
+                className="submit-button font-normal"
+                disabled={isSubmitting}
+              >
+                {isSubmitting && (
+                  <span className="submit-spinner" aria-hidden="true" />
+                )}
+                <span className="submit-label">
+                  {isSubmitting ? "Submitting..." : "Submit details"}
+                </span>
+              </button>
             </div>
-
-            <div className="field">
-              <input
-                id="walletAddress"
-                name="walletAddress"
-                type="text"
-                autoCapitalize="off"
-                autoCorrect="off"
-                spellCheck="false"
-                placeholder="Enter your wallet address"
-                required
-              />
-            </div>
-          </form>
-        </div>
-
-        <div className="card-footer">
-          <p className="status" role="status" aria-live="polite">
-            {status}
-          </p>
-          <button
-            type="submit"
-            form="wallet-form"
-            className="submit-button font-normal"
-            disabled={isSubmitting}
-          >
-            {isSubmitting && <span className="submit-spinner" aria-hidden="true" />}
-            <span className="submit-label">
-              {isSubmitting ? "Submitting..." : "Submit details"}
-            </span>
-          </button>
-        </div>
           </>
         )}
       </section>
@@ -719,11 +754,17 @@ export default function Home() {
         }
         .select-trigger .select-value {
           min-width: 0;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
           margin-left: 0;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
           font-size: 15px;
+        }
+        .select-trigger .select-value img {
+          flex: none;
         }
         .select-chevron {
           width: 30px;
